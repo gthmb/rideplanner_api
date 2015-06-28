@@ -1,0 +1,1 @@
+web: gunicorn rideplanner_api.wsgi --log-file -
