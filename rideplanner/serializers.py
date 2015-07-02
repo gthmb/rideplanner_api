@@ -7,6 +7,7 @@ from rideplanner.models import (
     Ride, 
     UserProfile, 
     UserGender,
+    UserPrivacySetting,
     RideMembership, 
     RideInvitation,
     AccessSetting,
@@ -17,7 +18,10 @@ from rideplanner.models import (
     RiderGroup,
     RiderGroupInvitation,
     RiderGroupMembership,
-    RiderGroupRideMembership
+    RiderGroupRideMembership,
+    RiderCategory,
+    RiderLicense,
+    RiderLicenseType,
 )
 
 from rest_framework import serializers
@@ -55,13 +59,32 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         write_only_fields = ('password',)
 
 
+class RiderLicenseSerializer(serializers.HyperlinkedModelSerializer):
+    license_type = serializers.SlugRelatedField(slug_field='value', read_only=True);
+    class Meta:
+        model = RiderLicense
+        fields = ('id', 'value', 'license_type', 'creator', 'url')
+        read_only_fields = ('creator',)
+
+class RiderLicenseTypeSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = RiderLicenseType
+        fields = ('id', 'value', 'url') 
+
 class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
     user = UserSerializer(read_only=True)
     gender = serializers.SlugRelatedField(slug_field='value', queryset=UserGender.objects.all())
-    
+    privacy_setting = serializers.SlugRelatedField(slug_field='value', queryset=UserPrivacySetting.objects.all())
+    category_road = serializers.SlugRelatedField(slug_field='value', queryset=RiderCategory.objects.all())
+    category_mtb = serializers.SlugRelatedField(slug_field='value', queryset=RiderCategory.objects.all())
+    category_track = serializers.SlugRelatedField(slug_field='value', queryset=RiderCategory.objects.all())
+    category_cx = serializers.SlugRelatedField(slug_field='value', queryset=RiderCategory.objects.all())    
+    licenses = RiderLicenseSerializer(read_only=True, many=True)
+    ride_matching = serializers.BooleanField()
+
     class Meta:
         model = UserProfile
-        fields = ('user', 'age', 'url', 'gender')
+        fields = ('user', 'age', 'url', 'gender', 'privacy_setting', 'category_road', 'category_mtb', 'category_track', 'category_cx', 'licenses', 'ride_matching')
 
 
 class RideStateTypeSerializer(serializers.HyperlinkedModelSerializer):

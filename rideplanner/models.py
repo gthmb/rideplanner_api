@@ -56,13 +56,40 @@ class RidePace(models.Model):
     def __unicode__(self):
         return self.name
 
+class RiderCategory(models.Model):
+    value = models.IntegerField(max_length=1)
+    name = models.CharField(max_length=16)
+
+    def __unicode__(self):
+        return self.name
+
+class RiderLicenseType(models.Model):
+    value = models.CharField(max_length=32)
+
+    def __unicode__(self):
+        return self.value
+
+class RiderLicense(models.Model):
+    license_type = models.ForeignKey(RiderLicenseType)
+    value = models.CharField(max_length=64)
+    creator = models.ForeignKey('rideplanner.UserProfile', related_name="rider_license_creator")
+    
+    def __unicode__(self):
+        return self.value
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, primary_key=True)
     age = models.IntegerField(max_length=2, null=True, blank=True)
     gender = models.ForeignKey(UserGender, null=True, blank=True)
     privacy_setting = models.ForeignKey(UserPrivacySetting, related_name="user_privacy_setting", default=1)
-    
+    category_road = models.ForeignKey(RiderCategory, related_name="rider_category_road", default=1)
+    category_mtb = models.ForeignKey(RiderCategory, related_name="rider_category_mtb", default=1)
+    category_track = models.ForeignKey(RiderCategory, related_name="rider_category_track", default=1)
+    category_cx = models.ForeignKey(RiderCategory, related_name="rider_category_cx", default=1)
+    licenses = models.ManyToManyField(RiderLicense, related_name="rider_license_membership", through="rideplanner.RiderLicenseMembership", null=True, blank=True);
+    ride_matching = models.BooleanField(default=False)
+
     class Meta:
         verbose_name = 'User Profile'
         verbose_name_plural = 'User Profiles'
@@ -170,3 +197,8 @@ class RiderGroupRideMembership(models.Model):
 
     def __unicode__(self):
         return self.ride.name + ' to ' + self.ridergroup.name
+
+class RiderLicenseMembership(models.Model):
+    user_profile = models.ForeignKey('rideplanner.UserProfile')
+    license = models.ForeignKey('rideplanner.RiderLicense')
+    timestamp = models.DateTimeField(default=datetime.now)

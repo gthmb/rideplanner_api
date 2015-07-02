@@ -12,6 +12,9 @@ from rideplanner.models import (
     RiderGroupInvitation,
     RiderGroupMembership,
     RiderGroupRideMembership,
+    RiderLicense,
+    RiderLicenseType,
+    RiderLicenseMembership,
 )
 
 # from snippets.permissions import IsOwnerOrReadOnly
@@ -25,6 +28,8 @@ from rideplanner.serializers import (
     RiderGroupInvitationSerializer,
     RiderGroupMembershipSerializer,
     RiderGroupRideMembershipSerializer,
+    RiderLicenseSerializer,
+    RiderLicenseTypeSerializer,
 )
 
 from rest_framework import mixins, generics, permissions, renderers, viewsets
@@ -116,3 +121,21 @@ class RiderGroupRideMembershipViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
+
+class RiderLicenseTypeViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = RiderLicenseType.objects.all()
+    serializer_class = RiderLicenseTypeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+class RiderLicenseViewSet(viewsets.ModelViewSet):
+    queryset = RiderLicense.objects.all()
+    serializer_class = RiderLicenseSerializer
+
+    def perform_create(self, serializer):
+        profile = UserProfile.objects.get(user=self.request.user)
+        license = serializer.save(creator=profile)
+
+        membership = RiderLicenseMembership(user_profile=profile, license=license)
+        membership.save();
